@@ -1,24 +1,21 @@
 (function sortByDate_0_1() {
   function toastMsg(str, sec, err) {
-    WF.showMessage(str, err);
-    setTimeout(WF.hideMessage, (sec || 2) * 1000);
+    WF.showMessage(str, err);
+    setTimeout(WF.hideMessage, (sec || 2) * 1000);
   }
-  // [] convert from items to new array
-  function sortAndMove(items, reverse) {
+  function sortDatesAndMove(dItems, reverse) {
     WF.hideDialog();
     setTimeout(() => {
-      items.sort((a, b) => reverse ? b.getNameInPlainText().localeCompare(a.getNameInPlainText()) : a.getNameInPlainText().localeCompare(b.getNameInPlainText()));
+      dItems.sort((a, b) => reverse ? b.date - a.date : a.date - b.date);
       WF.editGroup(() => {
-        items.forEach((item, i) => {
-          if (item.getPriority() !== i) WF.moveItems([item], current, i);
-        });
+        dItems.forEach((dItem, i) => WF.moveItems([WF.getItemById(dItem.pid)], current, i));
       });
-      // set focus to parent after sort
+      // set focus to current after sort
       WF.editItemName(current);
       toastMsg(`Sorted ${reverse ? "New to Old" : "Old to New"}`, 1)
     }, 50);
   }
-  function showSortDialog(bodyHtml, title, button1, button2) {
+  function showDatedSortDialog(bodyHtml, title, button1, button2) {
     const style = '.btnX{font-size:18px;background-color:#49baf2;border:2px solid;border-radius:20px;color:#fff;padding:5px 15px;margin-top:16px;margin-right:16px}.btnX:focus{border-color:#c4c4c4}';
     const buttons = `<div><button type="button" class="btnX" id="btn1">${button1}</button><button type="button" class="btnX" id="btn2">${button2}</button></div>`;
     WF.showAlertDialog(`<style>${htmlEscapeText(style)}</style><div>${bodyHtml}</div>${buttons}`, title);
@@ -26,18 +23,34 @@
       const btn1 = document.getElementById("btn1");
       const btn2 = document.getElementById("btn2");
       btn1.focus();
-      btn1.onclick = function () { sortAndMove(children) };
-      btn2.onclick = function () { sortAndMove(children, true) };
+      btn1.onclick = function () { sortDatesAndMove(datedItems) };
+      btn2.onclick = function () { sortDatesAndMove(datedItems, true) };
     }, 100);
   }
   const canCreateChild = item => !item.isReadOnly() || item.isMainDocumentRoot() || (item.isAddedSubtreePlaceholder() && !item.data.added_subtree.isReadOnly());
+
+  function addIfDated(item) {
+    const name = item.getName();
+    const doc = new DOMParser().parseFromString(name, 'text/html');
+    const time = doc.querySelector("time");
+    if (!time) return
+    const ta = time.attributes;
+    if (ta !== undefined && ta.startyear !== undefined && ta.startmonth !== undefined && ta.startday !== undefined) {
+      const startYMD = `${ta.startyear.value}-${ta.startmonth.value}-${ta.startday.value}`;
+      const startTime = ta.starthour ? ` ${ta.starthour.value}:${ta.startminute ? ta.startminute.value : "00"}` : " 00:00";
+      const startStr = startYMD + startTime;
+      datedItems.push({pid: item.getId(), pty: item.getPriority(), date: Date.parse(startStr)})
+    }
+    return
+  }
   if (WF.currentSearchQuery()) return void toastMsg("Sorting is disabled when search is active.", 3, true);
   const current = WF.currentItem();
   if (!canCreateChild(current)) return void toastMsg("Read-Only. Cannot sort bullets.", 3, true);
-  // [] Filter items for dates (need to verify attribute date exists)
   const children = current.getChildren();
   if (children.length < 2) return void toastMsg("Nothing to sort.", 3, true);
-  const sortInfo = `Sort <b>${children.length}</b> children?`;
-  // [x] rename sort buttons
-  showSortDialog(sortInfo, current.getNameInPlainText(), 'Old to New', 'New to Old');
+  const datedItems = [];
+  children.forEach(item => addIfDated(item));
+  if (datedItems.length === 0) return void toastMsg("No dated items to sort.", 3, true);
+  const sortInfo = `Sort <b>${datedItems.length}</b> dated items?`;
+  showDatedSortDialog(sortInfo, current.getNameInPlainText(), 'Old to New', 'New to Old');
 })();

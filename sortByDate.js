@@ -1,4 +1,4 @@
-(function sortByDate_0_1() {
+(function sortByDate_0_2() {
   function toastMsg(str, sec, err) {
     WF.showMessage(str, err);
     setTimeout(WF.hideMessage, (sec || 2) * 1000);
@@ -15,10 +15,11 @@
       toastMsg(`Sorted ${reverse ? "New to Old" : "Old to New"}`, 1)
     }, 50);
   }
+  const htmlEscText = str => str.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
   function showDatedSortDialog(bodyHtml, title, button1, button2) {
     const style = '.btnX{font-size:18px;background-color:#49baf2;border:2px solid;border-radius:20px;color:#fff;padding:5px 15px;margin-top:16px;margin-right:16px}.btnX:focus{border-color:#c4c4c4}';
     const buttons = `<div><button type="button" class="btnX" id="btn1">${button1}</button><button type="button" class="btnX" id="btn2">${button2}</button></div>`;
-    WF.showAlertDialog(`<style>${htmlEscapeText(style)}</style><div>${bodyHtml}</div>${buttons}`, title);
+    WF.showAlertDialog(`<style>${htmlEscText(style)}</style><div>${bodyHtml}</div>${buttons}`, title);
     setTimeout(() => {
       const btn1 = document.getElementById("btn1");
       const btn2 = document.getElementById("btn2");

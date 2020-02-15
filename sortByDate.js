@@ -32,7 +32,8 @@
 
   function addIfDated(item) {
     const name = item.getName();
-    const doc = new DOMParser().parseFromString(name, 'text/html');
+    const note = item.getNote();
+    const doc = new DOMParser().parseFromString(name + note, 'text/html');
     const time = doc.querySelector("time");
     if (!time) return
     const ta = time.attributes;

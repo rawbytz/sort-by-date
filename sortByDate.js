@@ -1,4 +1,4 @@
-(function sortByDate_0_4() {
+(function sortByDate_0_5() {
   function toastMsg(str, sec, err) {
     WF.showMessage(str, err);
     setTimeout(WF.hideMessage, (sec || 2) * 1000);
@@ -28,8 +28,6 @@
       btn2.onclick = function () { sortDatesAndMove(datedItems, true) };
     }, 100);
   }
-  const canCreateChild = item => !item.isReadOnly() || item.isMainDocumentRoot() || (item.isAddedSubtreePlaceholder() && !item.data.added_subtree.isReadOnly());
-
   function addIfDated(item) {
     const name = item.getName();
     const note = item.getNote();
@@ -46,7 +44,7 @@
   }
   if (WF.currentSearchQuery()) return void toastMsg("Sorting is disabled when search is active.", 3, true);
   const current = WF.currentItem();
-  if (!canCreateChild(current)) return void toastMsg("Read-Only. Cannot sort bullets.", 3, true);
+  if (current.isEmbedded()) return void toastMsg("Sorting disabled for added shares.", 3, true);
   const children = current.getChildren();
   if (children.length < 2) return void toastMsg("Nothing to sort.", 3, true);
   const datedItems = [];

@@ -1,4 +1,4 @@
-(function sortByDate_0_5() {
+(function sortByDate_0_6() {
   function toastMsg(str, sec, err) {
     WF.showMessage(str, err);
     setTimeout(WF.hideMessage, (sec || 2) * 1000);
@@ -20,13 +20,16 @@
     const style = '.btnX{font-size:18px;background-color:steelblue;border:2px solid;border-radius:20px;color:#fff;padding:5px 15px;margin-top:16px;margin-right:16px}.btnX:focus{border-color:#c4c4c4}';
     const buttons = `<div><button type="button" class="btnX" id="btn1">${button1}</button><button type="button" class="btnX" id="btn2">${button2}</button></div>`;
     WF.showAlertDialog(`<style>${htmlEscText(style)}</style><div>${bodyHtml}</div>${buttons}`, title);
-    setTimeout(() => {
-      const btn1 = document.getElementById("btn1");
-      const btn2 = document.getElementById("btn2");
-      btn1.focus();
-      btn1.onclick = function () { sortDatesAndMove(datedItems) };
-      btn2.onclick = function () { sortDatesAndMove(datedItems, true) };
-    }, 100);
+    const intervalId = setInterval(function () {
+      let btn1 = document.getElementById("btn1");
+      if (btn1) {
+        clearInterval(intervalId);
+        const btn2 = document.getElementById("btn2");
+        btn1.focus();
+        btn1.onclick = function () { sortDatesAndMove(datedItems) };
+        btn2.onclick = function () { sortDatesAndMove(datedItems, true) };
+      }
+    }, 50);
   }
   function addIfDated(item) {
     const name = item.getName();
@@ -38,7 +41,7 @@
       const startYMD = `${ta.startyear.value}-${ta.startmonth.value}-${ta.startday.value}`;
       const startTime = ta.starthour ? ` ${ta.starthour.value}:${ta.startminute ? ta.startminute.value : "00"}` : " 00:00";
       const startStr = startYMD + startTime;
-      datedItems.push({pid: item.getId(), pty: item.getPriority(), date: Date.parse(startStr)})
+      datedItems.push({ pid: item.getId(), pty: item.getPriority(), date: Date.parse(startStr) })
     }
     return
   }
